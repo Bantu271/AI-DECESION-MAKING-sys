@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NeuroCore AI Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
+body{
+background:#020617;
+color:white;
+overflow:hidden;
+height:100vh;
+}
+:root{
+--cyan:#22d3ee;
+--blue:#3b82f6;
+--purple:#8b5cf6;
+}
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background-image:
+linear-gradient(rgba(34,211,238,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(34,211,238,0.05) 1px, transparent 1px);
+background-size:40px 40px;
+animation:gridMove 14s linear infinite;
+z-index:-2;
+}
+@keyframes gridMove{
+0%{transform:translate(0,0);}
+100%{transform:translate(40px,40px);}
+}
+.app{display:flex;height:100vh}
+.sidebar{
+width:260px;
+background:rgba(2,6,23,.95);
+padding:30px;
+border-right:1px solid rgba(255,255,255,.08);
+}
+.logo{
+font-size:28px;
+font-weight:700;
+color:var(--cyan);
+margin-bottom:30px;
+}
+.menu-item{
+padding:14px;
+margin-bottom:12px;
+border-radius:14px;
+background:rgba(255,255,255,.03);
+cursor:pointer;
+transition:.3s;
+}
+.menu-item:hover{
+background:rgba(34,211,238,.1);
+transform:translateX(5px);
+}
+.main{
+flex:1;
+overflow:auto;
+padding:30px;
+}
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+.topbar h1{
+color:var(--cyan);
+}
+.btn{
+padding:12px 18px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+background:linear-gradient(90deg,var(--blue),var(--cyan));
+color:white;
+font-weight:600;
+}
+.kpi-container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-bottom:25px;
+}
+.kpi{
+padding:24px;
+border-radius:20px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,.08);
+}
+.kpi h1{
+margin-top:10px;
+color:var(--cyan);
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:24px;
+}
+.card{
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,.08);
+border-radius:22px;
+padding:24px;
+}
+.card h2{
+margin-bottom:20px;
+color:var(--cyan);
+}
+input,select{
+width:100%;
+padding:14px;
+border:none;
+border-radius:14px;
+margin-top:12px;
+background:rgba(255,255,255,.05);
+color:white;
+}
+.chat-window{
+height:250px;
+overflow:auto;
+background:#020617;
+padding:14px;
+border-radius:14px;
+margin-bottom:14px;
+}
+.message{
+padding:12px;
+border-radius:12px;
+margin-bottom:12px;
+}
+.user{background:rgba(59,130,246,.2)}
+.ai{background:rgba(139,92,246,.2)}
+.progress{
+height:12px;
+background:#111827;
+border-radius:20px;
+overflow:hidden;
+margin-top:15px;
+}
+.progress-bar{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,var(--purple),var(--cyan));
+}
+.terminal{
+height:200px;
+overflow:auto;
+background:black;
+padding:16px;
+border-radius:14px;
+margin-top:20px;
+font-family:monospace;
+color:#00ff99;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<aside class="sidebar">
+<div class="logo">NeuroCore AI</div>
+
+<div class="menu-item">Dashboard</div>
+<div class="menu-item">Datasets</div>
+<div class="menu-item">Training</div>
+<div class="menu-item">Analytics</div>
+<div class="menu-item">AutoML</div>
+<div class="menu-item">AI Assistant</div>
+
+</aside>
+
+<main class="main">
+
+<div class="topbar">
+<div>
+<h1>AI Decision Intelligence Platform</h1>
+<p>Enterprise AI Dashboard</p>
+</div>
+
+<button class="btn" onclick="alert('Report Exported')">
+Export Report
+</button>
+</div>
+
+<div class="kpi-container">
+
+<div class="kpi">
+<h4>Dataset Size</h4>
+<h1 id="datasetCount">0</h1>
+</div>
+
+<div class="kpi">
+<h4>Accuracy</h4>
+<h1 id="accuracyValue">0%</h1>
+</div>
+
+<div class="kpi">
+<h4>GPU Usage</h4>
+<h1 id="gpuValue">0%</h1>
+</div>
+
+<div class="kpi">
+<h4>AI Confidence</h4>
+<h1 id="confidenceValue">0%</h1>
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h2>Dataset Upload</h2>
+<input type="file" id="csv">
+<table id="datasetTable"></table>
+</div>
+
+<div class="card">
+<h2>Model Recommendation</h2>
+
+<select id="problemType">
+<option>Classification</option>
+<option>Regression</option>
+<option>Computer Vision</option>
+<option>NLP</option>
+</select>
+
+<button class="btn" onclick="recommendModel()" style="margin-top:16px">
+Recommend Model
+</button>
+
+<div id="modelOutput" style="margin-top:20px"></div>
+
+</div>
+
+<div class="card">
+
+<h2>Training Simulation</h2>
+
+<button class="btn" onclick="startTraining()">
+Start Training
+</button>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+<canvas id="trainingChart"></canvas>
+
+<div class="terminal" id="terminal"></div>
+
+</div>
+
+<div class="card">
+
+<h2>AI Assistant</h2>
+
+<div class="chat-window" id="chatWindow">
+
+<div class="message ai">
+Hello, I am NeuroGPT.
+</div>
+
+</div>
+
+<input id="chatInput" placeholder="Ask AI...">
+
+<button class="btn" style="margin-top:14px" onclick="sendMessage()">
+Send
+</button>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<script>
+
+document.getElementById("csv").addEventListener("change", e=>{
+
+const file = e.target.files[0];
+
+if(!file) return;
+
+const reader = new FileReader();
+
+reader.onload = function(event){
+
+const rows = event.target.result.split("\\n");
+
+document.getElementById("datasetCount").innerText = rows.length;
+
+};
+
+reader.readAsText(file);
+
+});
+
+function recommendModel(){
+
+const type = document.getElementById("problemType").value;
+
+const models = {
+
+Classification:"XGBoost",
+Regression:"CatBoost",
+"Computer Vision":"YOLO",
+NLP:"BERT"
+
+};
+
+document.getElementById("modelOutput").innerHTML = `
+<h3>${models[type]}</h3>
+<p style="margin-top:10px;color:#94a3b8">
+AI Confidence: ${(90+Math.random()*9).toFixed(1)}%
+</p>
+`;
+
+}
+
+const trainChart = new Chart(
+document.getElementById("trainingChart"),
+{
+type:"line",
+data:{
+labels:[],
+datasets:[{
+label:"Accuracy",
+data:[],
+borderColor:"#22d3ee",
+tension:.4
+}]
+}
+}
+);
+
+function log(msg){
+
+const terminal = document.getElementById("terminal");
+
+terminal.innerHTML += `<p>${msg}</p>`;
+
+terminal.scrollTop = terminal.scrollHeight;
+
+}
+
+function startTraining(){
+
+let epoch = 0;
+
+const interval = setInterval(()=>{
+
+epoch++;
+
+const acc = (70 + epoch*0.25).toFixed(2);
+
+const gpu = (50 + Math.random()*40).toFixed(0);
+
+const conf = (85 + Math.random()*10).toFixed(0);
+
+document.getElementById("accuracyValue").innerText = acc + "%";
+document.getElementById("gpuValue").innerText = gpu + "%";
+document.getElementById("confidenceValue").innerText = conf + "%";
+
+document.getElementById("progressBar").style.width = epoch + "%";
+
+trainChart.data.labels.push(epoch);
+trainChart.data.datasets[0].data.push(acc);
+trainChart.update();
+
+log(`[EPOCH ${epoch}] Accuracy ${acc}% | GPU ${gpu}%`);
+
+if(epoch>=100){
+
+clearInterval(interval);
+
+log("[AI] Training Completed.");
+
+}
+
+},120);
+
+}
+
+function sendMessage(){
+
+const input = document.getElementById("chatInput");
+
+if(!input.value) return;
+
+const chat = document.getElementById("chatWindow");
+
+chat.innerHTML += `
+<div class="message user">
+${input.value}
+</div>
+`;
+
+setTimeout(()=>{
+
+chat.innerHTML += `
+<div class="message ai">
+Recommended using XGBoost with feature scaling.
+</div>
+`;
+
+chat.scrollTop = chat.scrollHeight;
+
+},800);
+
+input.value="";
+
+}
+
+</script>
+
+</body>
+</html>
